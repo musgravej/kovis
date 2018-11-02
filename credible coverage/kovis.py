@@ -9,7 +9,7 @@ class Globals:
     def __init__(self):
         # always 202
         self.appid = '202'
-        self.corr_year = '2018'
+        self.year = '2018'
         # mailing date
         self.scan_date = '10/01/2018'
 
@@ -96,9 +96,10 @@ def process_pdf(pdf_file_path):
                            "{0} Record: {1}\n{2}\n\n".format(os.path.basename(pdf_file_path), i, text)))
 
                 if srch is not None:
-                    datfile.write("{appid};1;;;;;;;;;;;{wid};0001;N;2011;{scan}\n".format(wid=srch[0],
+                    datfile.write("{appid};1;;;;;;;;;;;{wid};0001;N;{year};{scan}\n".format(wid=srch[0],
                                                                                           appid=Globals().appid,
-                                                                                          scan=Globals().scan_date))
+                                                                                          scan=Globals().scan_date,
+                                                                                          year=Globals().year))
                 else:
                     print("Skipping: {0} Record: {1}\n{2}\n\n".format(os.path.basename(pdf_file_path), i, text))
             seq += 1

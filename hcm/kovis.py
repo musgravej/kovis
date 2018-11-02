@@ -9,7 +9,7 @@ class Globals:
     def __init__(self):
         # always 202
         self.appid = '202'
-        self.corr_year = '2018'
+        self.year = '2018'
         # mailing date
         self.scan_date = '10/01/2018'
 
@@ -121,9 +121,10 @@ def process_pdf(pdf_file_path, show_page_lists=False):
             with open(os.path.join(secondary_dir, "{0:0>5}001.pdf".format(seq)), 'wb') as output:
                 batch.write(output)
             with open(os.path.join(secondary_dir, "{0:0>5}IDX.dat".format(seq)), 'w') as datfile:
-                datfile.write("{appid};1;;;;;;;;;;;{wid};0001;N;2011;{scan}\n".format(wid=extracted_wid,
-                                                                                      appid=Globals().appid,
-                                                                                      scan=Globals().scan_date))
+                datfile.write("{appid};1;;;;;;;;;;;{wid};0001;N;{year};{scan}\n".format(wid=extracted_wid,
+                                                                                        appid=Globals().appid,
+                                                                                        scan=Globals().scan_date,
+                                                                                        year=Globals().year))
             seq += 1
             batch = PyPDF2.PdfFileWriter()
 

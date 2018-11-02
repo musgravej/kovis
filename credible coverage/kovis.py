@@ -1,4 +1,4 @@
-import pdfrw
+# import pdfrw
 import PyPDF2
 import os
 import re
@@ -95,7 +95,7 @@ def process_pdf(pdf_file_path):
                     print(("WARNING!!! Mulitple Matches!!!: "
                            "{0} Record: {1}\n{2}\n\n".format(os.path.basename(pdf_file_path), i, text)))
 
-                if srch != None:
+                if srch is not None:
                     datfile.write("{appid};1;;;;;;;;;;;{wid};0001;N;2011;{scan}\n".format(wid=srch[0],
                                                                                           appid=Globals().appid,
                                                                                           scan=Globals().scan_date))

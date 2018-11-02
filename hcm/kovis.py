@@ -1,8 +1,17 @@
-import pdfrw
+# import pdfrw
 import PyPDF2
 import os
 import re
 import datetime
+
+
+class Globals:
+    def __init__(self):
+        # always 202
+        self.appid = '202'
+        self.corr_year = '2018'
+        # mailing date
+        self.scan_date = '10/01/2018'
 
 
 def get_wellmark_id(pdf_file_path):
@@ -39,18 +48,20 @@ def process_pdf(pdf_file_path, show_page_lists=False):
     print("Processing: {0}".format(os.path.basename(pdf_file_path)))
 
     # compile regular expressions for searches
-    state_re = re.compile("[a-z, A-Z][a-z, A-Z](?=_Bucket)")
-    bucket_re = re.compile("([0-9]|[0-9][a-z, A-z])(?=_Print)")
-    # wid_re = re.compile("\d{3}(AD)\d{4}")
+    # state_re = re.compile("[a-z, A-Z][a-z, A-Z](?=_Bucket)")
+    # bucket_re = re.compile("([0-9]|[0-9][a-z, A-z])(?=_Print)")
     wid_re = re.compile("\d{3}(AD)\d{4}|(W)\d{8}")
     date_string = datetime.datetime.strftime(datetime.datetime.today(),"%m%d%Y%H%M%S")
     # 
 
     save_dir_name = ('jttocust100001_{timestamp}'.format(timestamp=date_string))
 
+    # Add primary folder
+    save_dir_name = os.path.join(save_dir_name, '0')
+
     # make a new directory to save results in
     if not os.path.exists(save_dir_name) and not show_page_lists:
-        os.mkdir(save_dir_name)
+        os.makedirs(save_dir_name)
 
     # open the pdf
     pdfFileObj = open(pdf_file_path, 'rb')
@@ -77,10 +88,18 @@ def process_pdf(pdf_file_path, show_page_lists=False):
     # initialize a couple of variables
     batch = PyPDF2.PdfFileWriter()
     extracted_wid = None
-    seq = 1
+    seq = 0
     for n, i in enumerate(all_pages, 1):
+        # where n is the iteratator count, i is the source pdf page number
         pageObj = pdfReader.getPage(i)
         batch.addPage(pdfReader.getPage(i))
+
+        # Create secondary folder
+        secondary_dir = int(seq / 100000)
+        secondary_dir = os.path.join(save_dir_name, str.zfill(str(secondary_dir), 2))
+        if not os.path.exists(secondary_dir):
+            os.mkdir(secondary_dir)
+        #
 
         if i in wid_search_pages:
             # search for text, save to variable
@@ -88,18 +107,23 @@ def process_pdf(pdf_file_path, show_page_lists=False):
             srch = wid_re.search(text)
             srch_cnt = wid_re.findall(text)
 
-            if srch != None:
+            if len(srch_cnt) > 2:
+                print(("WARNING!!! Too Many Matches!!!: "
+                       "{0} Record: {1}\n{2}\n\n".format(os.path.basename(pdf_file_path), i, text)))
+
+            if srch is not None:
                 extracted_wid = srch[0]
             else:
                 print("Skipping: {0} Record: {1}\n{2}\n\n".format(os.path.basename(pdf_file_path), i, text))
 
         if (i in doc_last_pages) and (i != pdfReader.numPages):
             # write dat file, write out to pdf
-            with open(os.path.join(save_dir_name, "{0:0>5}001.pdf".format(seq)), 'wb') as output:
+            with open(os.path.join(secondary_dir, "{0:0>5}001.pdf".format(seq)), 'wb') as output:
                 batch.write(output)
-            with open(os.path.join(save_dir_name, "{0:0>5}IDX.dat".format(seq)), 'w') as datfile:
-                datfile.write("202;1;;;;;;;;;;;{0};0001;N;2011;08/08/2011\n".format(srch[0]))
-
+            with open(os.path.join(secondary_dir, "{0:0>5}IDX.dat".format(seq)), 'w') as datfile:
+                datfile.write("{appid};1;;;;;;;;;;;{wid};0001;N;2011;{scan}\n".format(wid=extracted_wid,
+                                                                                      appid=Globals().appid,
+                                                                                      scan=Globals().scan_date))
             seq += 1
             batch = PyPDF2.PdfFileWriter()
 
@@ -116,5 +140,4 @@ if __name__ == '__main__':
     pdf_print_files = map(lambda f: os.path.abspath(os.path.join(process_path, f)), pdf_print_files)
 
     for pdf in pdf_print_files:
-        process_pdf(pdf, True)
-        
+        process_pdf(pdf)

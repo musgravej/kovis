@@ -97,9 +97,9 @@ def process_pdf(pdf_file_path):
 
                 if srch is not None:
                     datfile.write("{appid};1;;;;;;;;;;;{wid};0001;N;{year};{scan}\n".format(wid=srch[0],
-                                                                                          appid=Globals().appid,
-                                                                                          scan=Globals().scan_date,
-                                                                                          year=Globals().year))
+                                                                                            appid=Globals().appid,
+                                                                                            scan=Globals().scan_date,
+                                                                                            year=Globals().year))
                 else:
                     print("Skipping: {0} Record: {1}\n{2}\n\n".format(os.path.basename(pdf_file_path), i, text))
             seq += 1

@@ -17,20 +17,20 @@ class Globals:
 
 def get_wellmark_id(pdf_file_path):
 
-    pdfFileObj = open(pdf_file_path, 'rb')
-    pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+    pdf_file_obj = open(pdf_file_path, 'rb')
+    pdf_reader = PyPDF2.PdfFileReader(pdf_file_obj)
 
-    all_pages = [i for i in range(0, pdfReader.numPages)]
-    name_pages = ([i for i in range(0, pdfReader.numPages) if ((i + 1) % 4) == 0])
+    all_pages = [i for i in range(0, pdf_reader.numPages)]
+    name_pages = ([i for i in range(0, pdf_reader.numPages) if ((i + 1) % 4) == 0])
 
     batch = PyPDF2.PdfFileWriter()
     wid_re = re.compile("\d{3}(AD)\d{4}")
     seq = 1
     for n, i in enumerate(all_pages, 1):
-        pageObj = pdfReader.getPage(i)
-        batch.addPage(pdfReader.getPage(i))
+        page_obj = pdf_reader.getPage(i)
+        batch.addPage(pdf_reader.getPage(i))
         if i in name_pages:
-            text = pageObj.extractText()
+            text = page_obj.extractText()
             srch = wid_re.search(text)
             srch_cnt = wid_re.findall(text)
 
@@ -42,7 +42,7 @@ def get_wellmark_id(pdf_file_path):
 
         # if seq >= 5: break
 
-    pdfFileObj.close()
+    pdf_file_obj.close()
 
 
 def process_pdf(pdf_file_path, g, show_page_lists=False):

@@ -3,7 +3,8 @@ import PyPDF2
 import os
 import re
 import datetime
-
+import time
+import sys
 
 class Globals:
     def __init__(self):
@@ -11,7 +12,7 @@ class Globals:
         self.appid = '202'
         self.year = '2018'
         # mailing date
-        self.scan_date = '10/01/2018'
+        self.scan_date = ''
 
 
 def get_wellmark_id(pdf_file_path):
@@ -44,7 +45,8 @@ def get_wellmark_id(pdf_file_path):
     pdfFileObj.close()
 
 
-def process_pdf(pdf_file_path, show_page_lists=False):
+def process_pdf(pdf_file_path, g, show_page_lists=False):
+    
     print("Processing: {0}".format(os.path.basename(pdf_file_path)))
 
     # compile regular expressions for searches
@@ -122,23 +124,65 @@ def process_pdf(pdf_file_path, show_page_lists=False):
                 batch.write(output)
             with open(os.path.join(secondary_dir, "{0:0>5}IDX.dat".format(seq)), 'w') as datfile:
                 datfile.write("{appid};1;;;;;;;;;;;{wid};0001;N;{year};{scan}\n".format(wid=extracted_wid,
-                                                                                        appid=Globals().appid,
-                                                                                        scan=Globals().scan_date,
-                                                                                        year=Globals().year))
+                                                                                        appid=g.appid,
+                                                                                        scan=g.scan_date,
+                                                                                        year=g.year))
             seq += 1
             batch = PyPDF2.PdfFileWriter()
 
     pdfFileObj.close()
 
 
-if __name__ == '__main__':
+def questions():
+    print("Processing HCM Kovis\n\n")
+    ans = {'week': False, 'scan_date': False}
+    qry = int(input("Enter week number (ex: 2): "))
+    if qry not in range(1, 6):
+        print("Error, Invalid week range (1, 5)")
+        return ans
+    else:
+        ans['week'] = qry
 
-    process_path = os.path.join(os.curdir, 'Week 4')
+    qry = str(input("Enter scan date MM/DD/YYYY (ex: 10/05/1975): "))
+    datere = re.compile("\d{2}/\d{2}/\d{4}")
+    if not datere.search(qry):
+        print("Error, Invalid date format (MM/DD/YYYY)")
+        return ans
+    else:
+        ans['scan_date'] = qry
 
+    return ans
+
+
+def find_pdfs(param):
+    process_path = os.path.join(os.curdir, 'Week {}'.format(param['week']))
     print_re = re.compile("(Print)")
     pdf_print_files = [f for f in os.listdir(process_path) if print_re.search(f) and f[-3:].upper() == 'PDF']
 
     pdf_print_files = map(lambda f: os.path.abspath(os.path.join(process_path, f)), pdf_print_files)
 
-    for pdf in pdf_print_files:
-        process_pdf(pdf)
+    return pdf_print_files
+
+
+def main():
+    param = questions()
+
+    if param['week'] and param['scan_date']:
+        g = Globals()
+        g.scan_date = param['scan_date']
+
+        for pdf in find_pdfs(param):
+            process_pdf(pdf, g)
+
+        print("Kovis processing complete")
+        time.sleep(3)
+        sys.exit()
+
+    else:
+        print("Exiting program")
+        time.sleep(3)
+        sys.exit()
+
+
+if __name__ == '__main__':
+    main()
